@@ -1,1 +1,2097 @@
-# livu-app
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>LIV.U · Morning</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── Reset ────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+
+    /* ─── LIV.U blue tokens — harmonized with marketing site ─ */
+    :root {
+      --bg:          #0A0F1F;            /* Marketing site navy */
+      --bg-soft:     #11172B;            /* Elevated surface */
+      --bg-deeper:   #060912;            /* Recessed surface */
+      --text:        #F4F6FA;            /* Bright off-white */
+      --text-soft:   rgba(244,246,250,0.92);
+      --text-muted:  #A8B2C4;            /* Lifted slate-blue */
+      --text-faint:  rgba(244,246,250,0.55);
+      --text-ghost:  rgba(244,246,250,0.18);
+      --hairline:    rgba(244,246,250,0.08);
+      --hairline-2:  rgba(244,246,250,0.14);
+      --safe:        #00E676;            /* Recovered green — default state */
+      --safe-glow:   rgba(0,230,118,0.32);
+      --fatigue:     #D500F9;            /* Adapt pink */
+      --fatigue-glow: rgba(213,0,249,0.22);
+      --accent:      #2979FF;            /* LIV.U brand blue */
+      --ambient:     radial-gradient(circle, rgba(41,121,255,0.22) 0%, rgba(10,15,31,0) 70%);
+
+      --serif:  'Fraunces', Georgia, serif;
+      --sans:   'Inter', -apple-system, system-ui, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-weight: 400;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+      min-height: 100vh;
+      min-height: 100dvh;
+    }
+
+    /* Ambient grain — adds organic texture, not noise */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.6;
+      background-image:
+        radial-gradient(circle at 20% 30%, rgba(41,121,255,0.06) 0%, transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(95,168,255,0.04) 0%, transparent 50%);
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       LAYOUT — mobile-first, single screen
+    ═══════════════════════════════════════════════════════ */
+    .stage {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      min-height: 100dvh;
+      max-width: 420px;
+      margin: 0 auto;
+      padding: 0 28px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ─── Top meta strip ───────────────────────────────────── */
+    .top-strip {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 24px 0 0;
+      letter-spacing: 0.22em;
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+    .top-strip .brand { color: var(--text); }
+    .top-strip .date  { font-feature-settings: "tnum"; }
+
+    /* ═══════════════════════════════════════════════════════
+       HERO — the ambient orb and central message
+    ═══════════════════════════════════════════════════════ */
+    .hero {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 60px 0 40px;
+      text-align: center;
+    }
+
+    /* Ambient breathing orb — 6 breaths per minute = 10s cycle */
+    .orb-wrap {
+      position: relative;
+      width: 280px;
+      height: 280px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 56px;
+    }
+
+    /* Outermost ambient halo — sits behind everything */
+    .orb-ambient {
+      position: absolute;
+      inset: -80px;
+      background: var(--ambient);
+      border-radius: 50%;
+      animation: breathe-soft 10s ease-in-out infinite;
+    }
+
+    /* Mid breathing ring */
+    .orb-ring {
+      position: absolute;
+      inset: 24px;
+      border-radius: 50%;
+      border: 1px solid var(--hairline-2);
+      animation: breathe 10s ease-in-out infinite;
+    }
+    .orb-ring-2 {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 1px solid var(--hairline);
+      animation: breathe-wide 10s ease-in-out infinite;
+    }
+
+    /* Core orb — the still center */
+    .orb-core {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 50% 40%,
+          rgba(0,230,118,0.28) 0%,
+          rgba(0,230,118,0.10) 35%,
+          rgba(10,15,31,0) 70%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      animation: breathe-core 10s ease-in-out infinite;
+    }
+
+    /* The score sits inside the orb — barely visible at rest */
+    .orb-state {
+      font-family: var(--serif);
+      font-size: 38px;
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      text-align: center;
+      color: var(--safe);
+      transition: color 0.8s ease;
+    }
+
+    /* Breathing keyframes — restorative rhythm */
+    @keyframes breathe {
+      0%, 100% { transform: scale(1);    opacity: 0.7; }
+      50%      { transform: scale(1.08); opacity: 1;   }
+    }
+    @keyframes breathe-wide {
+      0%, 100% { transform: scale(1);    opacity: 0.5; }
+      50%      { transform: scale(1.12); opacity: 0.8; }
+    }
+    @keyframes breathe-soft {
+      0%, 100% { transform: scale(1);    opacity: 0.6; }
+      50%      { transform: scale(1.15); opacity: 1;   }
+    }
+    @keyframes breathe-core {
+      0%, 100% { transform: scale(1);    }
+      50%      { transform: scale(1.025); }
+    }
+
+    /* Respect motion preferences */
+    @media (prefers-reduced-motion: reduce) {
+      .orb-ambient, .orb-ring, .orb-ring-2, .orb-core {
+        animation: none;
+      }
+    }
+
+    /* ─── Central message ─────────────────────────────────── */
+    .message {
+      max-width: 320px;
+      margin: 0 auto;
+    }
+    .message-greeting {
+      font-family: var(--sans);
+      font-weight: 500;
+      font-size: 12px;
+      line-height: 1.4;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      margin-bottom: 18px;
+    }
+    /* The default voice — ultra-short, glance-and-know */
+    .message-short {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: 30px;
+      line-height: 1.2;
+      letter-spacing: -0.025em;
+      color: var(--text);
+    }
+    /* Full text — hidden by default, revealed on tap */
+    .message-body {
+      font-family: var(--sans);
+      font-weight: 400;
+      font-size: 16px;
+      line-height: 1.65;
+      color: var(--text-soft);
+      letter-spacing: 0.005em;
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transition: max-height 0.5s cubic-bezier(0.16,1,0.3,1),
+                  opacity 0.4s ease,
+                  margin 0.4s ease;
+      margin-top: 0;
+    }
+    .message-body.revealed {
+      max-height: 240px;
+      opacity: 1;
+      margin-top: 16px;
+    }
+    .message-body em {
+      font-family: var(--serif);
+      font-style: italic;
+      font-weight: 500;
+      color: var(--text);
+    }
+    /* Quiet 'more' affordance */
+    .message-more {
+      margin-top: 14px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: var(--sans);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--text-ghost);
+      transition: color 0.3s ease;
+      padding: 4px 0;
+    }
+    .message-more:hover { color: var(--text-faint); }
+
+    /* ═══════════════════════════════════════════════════════
+       MORNING NOTIFICATION CARD — the supportive voice
+    ═══════════════════════════════════════════════════════ */
+    .notif {
+      margin: 40px 0 24px;
+      padding: 22px 22px 20px;
+      background:
+        linear-gradient(180deg, rgba(244,246,250,0.04) 0%, rgba(244,246,250,0) 40%),
+        #11172B;
+      border: 1px solid var(--hairline);
+      border-radius: 24px;
+      box-shadow:
+        inset 0 1px 0 rgba(244,246,250,0.06),
+        0 1px 2px rgba(0,0,0,0.3),
+        0 12px 32px -12px rgba(0,0,0,0.55);
+    }
+    .notif-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      font-size: 10px;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .notif-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--safe);
+      font-weight: 500;
+    }
+    .notif-status::before {
+      content: "";
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--safe);
+      box-shadow: 0 0 6px var(--safe-glow);
+    }
+    .notif-title {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: 20px;
+      line-height: 1.3;
+      letter-spacing: -0.015em;
+      color: var(--text);
+      margin-bottom: 10px;
+    }
+    .notif-body {
+      font-size: 15px;
+      line-height: 1.6;
+      color: var(--text-soft);
+      font-weight: 400;
+    }
+    .notif-signature {
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid var(--hairline);
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      font-weight: 500;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       BOTTOM ACTIONS — minimal, gentle
+    ═══════════════════════════════════════════════════════ */
+    .actions {
+      padding-bottom: 36px;
+    }
+    .action-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .action-link {
+      flex: 1;
+      text-align: center;
+      padding: 15px 12px;
+      font-size: 11px;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--text);
+      background: transparent;
+      border: 1px solid var(--hairline-2);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: color 0.4s ease, border-color 0.4s ease, background 0.4s ease;
+      font-family: var(--sans);
+      font-weight: 500;
+    }
+    .action-link:hover {
+      color: var(--text);
+      border-color: rgba(244,246,250,0.22);
+      background: rgba(244,246,250,0.04);
+    }
+
+    /* Reveal-signals state — hidden by default */
+    .signals {
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transition: max-height 0.6s cubic-bezier(0.16,1,0.3,1),
+                  opacity 0.4s ease 0.1s,
+                  margin 0.4s ease;
+      margin: 0;
+    }
+    .signals.revealed {
+      max-height: 600px;
+      opacity: 1;
+      margin: 20px 0 28px;
+    }
+    .signals-inner {
+      padding: 24px 0 8px;
+      border-top: 1px solid var(--hairline);
+    }
+    .signals-eyebrow {
+      font-size: 10px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 18px;
+      text-align: center;
+      font-weight: 500;
+    }
+    .signals-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--hairline);
+      border: 1px solid var(--hairline);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .signal-cell {
+      background: var(--bg);
+      padding: 16px 18px;
+    }
+    .signal-label {
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    .signal-value {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: 24px;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      font-feature-settings: "tnum";
+    }
+    .signal-unit {
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-left: 5px;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       REFLECTION CARD — the daily 24-hour assessment
+    ═══════════════════════════════════════════════════════ */
+    .reflect {
+      margin: 0 0 28px;
+      padding: 28px 26px;
+      background:
+        linear-gradient(180deg, rgba(244,246,250,0.045) 0%, rgba(244,246,250,0) 38%),
+        #11172B;
+      border: 1px solid var(--hairline-2);
+      border-radius: 24px;
+      position: relative;
+      overflow: hidden;
+      box-shadow:
+        inset 0 1px 0 rgba(244,246,250,0.07),
+        0 1px 2px rgba(0,0,0,0.3),
+        0 16px 40px -14px rgba(0,0,0,0.6);
+    }
+
+    /* Soft halo behind the reflection card */
+    .reflect::before {
+      content: "";
+      position: absolute;
+      top: -40%;
+      right: -20%;
+      width: 280px;
+      height: 280px;
+      background: radial-gradient(circle, rgba(41,121,255,0.10) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .reflect > * { position: relative; z-index: 1; }
+
+    .reflect-eyebrow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      font-family: var(--sans);
+      font-size: 11px;
+      letter-spacing: 0.26em;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .reflect-eyebrow .ribbon {
+      color: var(--safe);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+    }
+    .reflect-eyebrow .ribbon::before {
+      content: "";
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--safe);
+      box-shadow: 0 0 8px var(--safe-glow);
+    }
+
+    /* The personalized reflection paragraph */
+    .reflect-message {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: 19px;
+      line-height: 1.5;
+      letter-spacing: -0.012em;
+      color: var(--text);
+      margin-bottom: 28px;
+    }
+    .reflect-message em {
+      font-style: italic;
+      color: var(--safe);
+      font-weight: 500;
+    }
+
+    /* Three recommendations — physical, mental, emotional */
+    .reflect-recs {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      background: var(--hairline);
+      border: 1px solid var(--hairline-2);
+      border-radius: 18px;
+      overflow: hidden;
+      margin-bottom: 26px;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.35);
+    }
+    .rec {
+      background:
+        linear-gradient(180deg, rgba(244,246,250,0.025) 0%, rgba(244,246,250,0) 50%),
+        rgba(13,18,34,0.92);
+      padding: 18px 20px;
+      display: grid;
+      grid-template-columns: 86px 1fr 16px;
+      gap: 16px;
+      align-items: center;
+      cursor: pointer;
+      transition: background 0.3s cubic-bezier(0.16,1,0.3,1);
+      border: none;
+      width: 100%;
+      text-align: left;
+      font-family: inherit;
+    }
+    .rec:hover {
+      background:
+        linear-gradient(180deg, rgba(41,121,255,0.10) 0%, rgba(41,121,255,0.02) 100%),
+        rgba(13,18,34,0.92);
+    }
+    .rec-label {
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--safe);
+    }
+    .rec-body {
+      font-family: var(--sans);
+      font-weight: 400;
+      font-size: 15px;
+      line-height: 1.55;
+      color: var(--text);
+    }
+    .rec-body strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+    .rec-arrow {
+      color: var(--text-muted);
+      font-size: 18px;
+      line-height: 1;
+      transition: transform 0.25s ease, color 0.25s ease;
+      font-weight: 300;
+    }
+    .rec:hover .rec-arrow {
+      transform: translateX(3px);
+      color: var(--safe);
+    }
+
+    /* The wisdom quote at the bottom */
+    .reflect-quote {
+      padding-top: 22px;
+      border-top: 1px solid var(--hairline-2);
+      text-align: center;
+    }
+    .reflect-quote-text {
+      font-family: var(--serif);
+      font-style: italic;
+      font-weight: 400;
+      font-size: 17px;
+      line-height: 1.55;
+      letter-spacing: -0.01em;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+    .reflect-quote-attr {
+      font-family: var(--sans);
+      font-size: 10px;
+      letter-spacing: 0.26em;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 400px) {
+      .rec {
+        grid-template-columns: 1fr 16px;
+        gap: 8px;
+      }
+      .rec-label { grid-column: 1; }
+      .rec-body  { grid-column: 1; }
+      .rec-arrow { grid-row: 1; grid-column: 2; align-self: start; }
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       DEMO STATE TOGGLE — preview the three readiness states
+    ═══════════════════════════════════════════════════════ */
+    .demo-toggle {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 12px;
+      background:
+        linear-gradient(180deg, rgba(244,246,250,0.04) 0%, rgba(6,9,18,0) 100%),
+        rgba(6,9,18,0.88);
+      backdrop-filter: blur(20px) saturate(140%);
+      -webkit-backdrop-filter: blur(20px) saturate(140%);
+      border-bottom: 1px solid var(--hairline);
+      box-shadow: 0 4px 24px -8px rgba(0,0,0,0.5);
+    }
+    .demo-toggle-label {
+      font-family: var(--sans);
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      margin-right: 6px;
+    }
+    .demo-btn {
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      padding: 7px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--hairline-2);
+      background: rgba(244,246,250,0.02);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.35s cubic-bezier(0.16,1,0.3,1);
+    }
+    .demo-btn:hover {
+      color: var(--text);
+      background: rgba(244,246,250,0.05);
+    }
+    .demo-btn.active {
+      color: var(--bg);
+      font-weight: 600;
+      box-shadow: 0 2px 12px -2px var(--safe-glow), inset 0 1px 0 rgba(255,255,255,0.25);
+    }
+    /* active background set inline by JS to match state color */
+    .demo-toggle { flex-wrap: wrap; }
+    .demo-group { display: inline-flex; align-items: center; gap: 6px; }
+    .demo-group-label {
+      font-family: var(--sans); font-size: 8px; font-weight: 700;
+      letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-ghost);
+      margin-right: 2px;
+    }
+    .demo-divider { width:1px; height:18px; background:var(--hairline-2); margin:0 4px; }
+    .demo-btn-alt { border-color: rgba(41,121,255,0.4); color: var(--accent); }
+    .demo-btn-alt:hover { background: rgba(41,121,255,0.12); color: var(--text); }
+    .demo-btn-lang { padding:7px 11px; min-width:38px; }
+    .demo-btn-lang.active { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+    .stage { padding-top: 8px; }
+    @media (max-width: 400px) {
+      .demo-btn { padding: 7px 11px; font-size: 10px; }
+      .demo-toggle-label { display: none; }
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       DETAIL SCREEN — drills into Physical / Mental / Emotional
+    ═══════════════════════════════════════════════════════ */
+    .detail-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: var(--bg);
+      overflow-y: auto;
+      transform: translateX(100%);
+      transition: transform 0.5s cubic-bezier(0.16,1,0.3,1);
+      visibility: hidden;
+    }
+    .detail-screen.open {
+      transform: translateX(0);
+      visibility: visible;
+    }
+
+    /* Backdrop atmosphere on detail screen */
+    .detail-screen::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% 0%, rgba(41,121,255,0.07) 0%, transparent 50%);
+      z-index: 0;
+    }
+
+    .detail-inner {
+      position: relative;
+      z-index: 1;
+      max-width: 420px;
+      margin: 0 auto;
+      padding: 28px 28px 60px;
+      min-height: 100vh;
+    }
+
+    .detail-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(244,246,250,0.06);
+      border: 1px solid var(--hairline-2);
+      padding: 11px 18px 11px 14px;
+      margin: 4px 0 30px;
+      border-radius: 999px;
+      font-family: var(--sans);
+      font-size: 12px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--text-soft);
+      cursor: pointer;
+      transition: color 0.25s, background 0.25s, transform 0.25s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .detail-back:hover { color: var(--text); background: rgba(244,246,250,0.10); }
+    .detail-back:active { transform: scale(0.96); }
+    .detail-back-arrow {
+      font-size: 20px;
+      line-height: 1;
+      font-weight: 400;
+      margin-top: -1px;
+    }
+    /* ── Screen footer navigation (back / home / forward + dots) ── */
+    .screen-nav {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--hairline-2);
+    }
+    .screen-nav-btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      background: rgba(244,246,250,0.05); border: 1px solid var(--hairline-2);
+      border-radius: 999px; cursor: pointer; -webkit-tap-highlight-color: transparent;
+      font-family: var(--sans); font-size: 11px; font-weight: 600;
+      letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-soft);
+      padding: 11px 16px; transition: color 0.25s, background 0.25s, transform 0.2s, opacity 0.25s;
+    }
+    .screen-nav-btn:hover { color: var(--text); background: rgba(244,246,250,0.10); }
+    .screen-nav-btn:active { transform: scale(0.95); }
+    .screen-nav-btn.icon-only { padding: 11px 14px; }
+    .screen-nav-btn[disabled] { opacity: 0.25; pointer-events: none; }
+    .screen-nav-arrow { font-size: 18px; line-height: 1; }
+    .screen-nav-home { color: var(--accent); border-color: rgba(41,121,255,0.4); }
+    .screen-nav-home:hover { background: rgba(41,121,255,0.12); color: var(--text); }
+    .screen-nav-dots { display: flex; gap: 7px; align-items: center; }
+    .screen-nav-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--hairline-2); transition: background 0.3s, transform 0.3s; }
+    .screen-nav-dot.active { background: var(--accent); transform: scale(1.3); }
+
+    .detail-eyebrow {
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--safe);
+      margin-bottom: 14px;
+    }
+    .detail-title {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: 36px;
+      letter-spacing: -0.025em;
+      line-height: 1.1;
+      color: var(--text);
+      margin-bottom: 18px;
+    }
+    .detail-lead {
+      font-family: var(--sans);
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 1.6;
+      color: var(--text-soft);
+      margin-bottom: 36px;
+    }
+
+    /* Hero recommendation block */
+    .detail-rec {
+      background:
+        linear-gradient(180deg, rgba(41,121,255,0.14) 0%, rgba(41,121,255,0.05) 100%);
+      border: 1px solid rgba(41,121,255,0.22);
+      border-radius: 22px;
+      padding: 24px 22px;
+      margin-bottom: 36px;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.08),
+        0 12px 32px -14px rgba(41,121,255,0.4);
+    }
+    .detail-rec-label {
+      font-family: var(--sans);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--safe);
+      margin-bottom: 10px;
+    }
+    .detail-rec-text {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: 20px;
+      line-height: 1.4;
+      letter-spacing: -0.015em;
+      color: var(--text);
+    }
+    .detail-rec-text strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    /* Section heading inside detail */
+    .detail-section-h {
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin: 0 0 16px;
+    }
+
+    /* Metric grid */
+    .detail-metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--hairline);
+      border: 1px solid var(--hairline-2);
+      border-radius: 18px;
+      overflow: hidden;
+      margin-bottom: 36px;
+    }
+    .detail-metric {
+      background: rgba(10,15,31,0.55);
+      padding: 20px 18px;
+    }
+    .detail-metric-label {
+      font-family: var(--sans);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+    .detail-metric-value {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: 28px;
+      letter-spacing: -0.025em;
+      color: var(--text);
+      font-feature-settings: "tnum";
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .detail-metric-unit {
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-left: 4px;
+    }
+    .detail-metric-delta {
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--safe);
+    }
+    .detail-metric-delta.down { color: var(--fatigue); }
+
+    /* Trend visualization */
+    .detail-trend {
+      background: rgba(244,246,250,0.025);
+      border: 1px solid var(--hairline-2);
+      border-radius: 22px;
+      padding: 22px;
+      margin-bottom: 36px;
+    }
+    .detail-trend-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 18px;
+    }
+    .detail-trend-title {
+      font-family: var(--sans);
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+    }
+    .detail-trend-window {
+      font-family: var(--sans);
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .trend-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+      height: 80px;
+    }
+    .trend-bar {
+      flex: 1;
+      background: linear-gradient(180deg, var(--safe) 0%, rgba(95,168,255,0.2) 100%);
+      border-radius: 3px;
+      min-height: 8px;
+      opacity: 0.4;
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    .trend-bar.today {
+      opacity: 1;
+      box-shadow: 0 0 12px var(--safe-glow);
+    }
+    .trend-labels {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .trend-label {
+      flex: 1;
+      text-align: center;
+      font-family: var(--sans);
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .trend-label.today { color: var(--safe); }
+
+    /* Actions list */
+    .detail-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 36px;
+    }
+    .detail-action {
+      background: rgba(244,246,250,0.025);
+      border: 1px solid var(--hairline-2);
+      border-radius: 16px;
+      padding: 16px 18px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+    .detail-action-bullet {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--safe);
+      box-shadow: 0 0 8px var(--safe-glow);
+      margin-top: 8px;
+      flex-shrink: 0;
+    }
+    .detail-action-body {
+      flex: 1;
+    }
+    .detail-action-title {
+      font-family: var(--sans);
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .detail-action-note {
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 400;
+      line-height: 1.55;
+      color: var(--text-soft);
+    }
+
+    /* Closing note */
+    .detail-note {
+      padding: 24px 22px;
+      background: rgba(244,246,250,0.025);
+      border: 1px solid var(--hairline);
+      border-radius: 18px;
+      font-family: var(--serif);
+      font-style: italic;
+      font-weight: 400;
+      font-size: 15px;
+      line-height: 1.6;
+      color: var(--text-soft);
+      text-align: center;
+    }
+
+    /* ── POST-MATCH RECOVERY RITUAL ── */
+    .pm-ritual {
+      background: linear-gradient(180deg, rgba(41,121,255,0.12) 0%, rgba(41,121,255,0.03) 100%), #11172B;
+      border: 1px solid rgba(41,121,255,0.22);
+      border-radius: 24px;
+      padding: 24px 22px;
+      margin-bottom: 28px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 16px 40px -16px rgba(41,121,255,0.4);
+    }
+    .pm-ritual-head {
+      display: flex; align-items: baseline; justify-content: space-between;
+      margin-bottom: 22px; padding-bottom: 18px; border-bottom: 1px solid var(--hairline-2);
+      font-family: var(--sans); font-size: 11px; font-weight: 600;
+      letter-spacing: 0.22em; text-transform: uppercase; color: var(--text-muted);
+    }
+    .pm-countdown {
+      font-family: var(--serif); font-size: 30px; font-weight: 400; letter-spacing: -0.02em;
+      color: var(--accent); font-feature-settings: "tnum"; text-transform: none;
+    }
+    .pm-steps { display: flex; flex-direction: column; gap: 18px; }
+    .pm-step { display: grid; grid-template-columns: 64px 1fr; gap: 16px; align-items: start; }
+    .pm-step-time {
+      font-family: var(--sans); font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+      color: var(--accent); padding-top: 2px;
+    }
+    .pm-step-title { font-family: var(--serif); font-size: 18px; font-weight: 400; color: var(--text); margin-bottom: 4px; letter-spacing: -0.01em; }
+    .pm-step-note { font-family: var(--sans); font-size: 13px; line-height: 1.55; color: var(--text-soft); }
+
+    /* ── FAMILY VIEW ── */
+    .fam-card {
+      text-align: center; padding: 40px 28px; margin-bottom: 24px;
+      background: linear-gradient(180deg, rgba(0,230,118,0.08) 0%, rgba(0,230,118,0.02) 100%), #11172B;
+      border: 1px solid rgba(0,230,118,0.22); border-radius: 24px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 16px 40px -16px rgba(0,0,0,0.5);
+    }
+    .fam-state-dot {
+      width: 12px; height: 12px; border-radius: 50%; background: var(--safe);
+      box-shadow: 0 0 16px var(--safe-glow); margin: 0 auto 18px;
+    }
+    .fam-state-word { font-family: var(--serif); font-size: 28px; font-weight: 400; letter-spacing: -0.02em; color: var(--text); margin-bottom: 12px; }
+    .fam-state-sub { font-family: var(--sans); font-size: 15px; line-height: 1.6; color: var(--text-soft); max-width: 300px; margin: 0 auto; }
+    .fam-rows { display: flex; flex-direction: column; gap: 1px; background: var(--hairline); border: 1px solid var(--hairline-2); border-radius: 18px; overflow: hidden; margin-bottom: 24px; }
+    .fam-row {
+      display: flex; justify-content: space-between; align-items: center;
+      background: rgba(10,15,31,0.55); padding: 16px 20px;
+      font-family: var(--sans); font-size: 14px;
+    }
+    .fam-row span:first-child { color: var(--text-muted); font-weight: 500; }
+    .fam-row span:last-child { color: var(--text); }
+
+    /* ═══════════════════════════════════════════════════════
+       Larger screen — frame the phone view
+    ═══════════════════════════════════════════════════════ */
+    @media (min-width: 768px) {
+      body {
+        padding: 40px 0;
+        background:
+          radial-gradient(ellipse at center top, rgba(41,121,255,0.06) 0%, transparent 50%),
+          var(--bg);
+      }
+      .stage {
+        border-radius: 36px;
+        border: 1px solid var(--hairline);
+        margin: 20px auto;
+        min-height: calc(100vh - 80px);
+        box-shadow:
+          0 1px 0 rgba(244,246,250,0.04) inset,
+          0 30px 80px -20px rgba(0,0,0,0.6);
+        background:
+          radial-gradient(ellipse at 50% 0%, rgba(41,121,255,0.06) 0%, transparent 60%);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══ DEMO STATE TOGGLE ═══════════════════════════════════ -->
+  <div class="demo-toggle">
+    <span class="demo-group">
+      <span class="demo-group-label">State</span>
+      <button class="demo-btn" id="btn-recovered" onclick="setState('recovered')">Recovered</button>
+      <button class="demo-btn" id="btn-balanced" onclick="setState('balanced')">Balanced</button>
+      <button class="demo-btn" id="btn-adapt" onclick="setState('adapt')">Adapt</button>
+    </span>
+    <span class="demo-divider"></span>
+    <span class="demo-group">
+      <span class="demo-group-label">View</span>
+      <button class="demo-btn demo-btn-alt" id="btn-postmatch" onclick="openPostMatch()">Post-Match</button>
+      <button class="demo-btn demo-btn-alt" id="btn-family" onclick="openFamily()">Family</button>
+    </span>
+    <span class="demo-divider"></span>
+    <span class="demo-group">
+      <span class="demo-group-label">Lang</span>
+      <button class="demo-btn demo-btn-lang" id="lang-en" onclick="setLang('en')">EN</button>
+      <button class="demo-btn demo-btn-lang" id="lang-pt" onclick="setLang('pt')">PT</button>
+    </span>
+  </div>
+
+  <div class="stage">
+
+    <!-- Top meta strip — barely there -->
+    <div class="top-strip">
+      <span class="brand">LIV.U</span>
+      <span class="date">TUE · OCT 14</span>
+    </div>
+
+    <!-- ═══ HERO: breathing orb + message ═══════════════════════ -->
+    <section class="hero">
+
+      <div class="orb-wrap">
+        <div class="orb-ambient"></div>
+        <div class="orb-ring-2"></div>
+        <div class="orb-ring"></div>
+        <div class="orb-core">
+          <span class="orb-state" id="d-status">Recovered</span>
+        </div>
+      </div>
+
+      <div class="message">
+        <p class="message-greeting" id="d-greeting">Good morning, Maya.</p>
+        <p class="message-short" id="d-short">Ready. Train sharp, not deep.</p>
+        <p class="message-body" id="d-message">
+          You slept deeply. Your body is <em>ready</em> — but there's no need
+          to push hard. A calm, focused session will serve you well today.
+        </p>
+        <button class="message-more" id="d-more" onclick="toggleMessage()">more</button>
+      </div>
+
+    </section>
+
+    <!-- ═══ MORNING NOTIFICATION CARD ═══════════════════════════ -->
+    <div class="notif">
+      <div class="notif-header">
+        <span>Today's Note</span>
+        <span class="notif-status" id="d-notif-status">Safe to train</span>
+      </div>
+      <p class="notif-title" id="d-notif-title">Move gently into the day.</p>
+      <p class="notif-body" id="d-notif-body">
+        Your recovery is strong. Listen to your body during warm-up —
+        if anything feels off, we'll adjust together. You don't need to
+        prove anything today.
+      </p>
+      <div class="notif-signature">
+        <span>5:48 AM · Local</span>
+        <span>Cleared by Sarah, ATC</span>
+      </div>
+    </div>
+
+    <!-- ═══ REFLECTION CARD — last 24 + next 24 ═══════════════════ -->
+    <div class="reflect">
+
+      <div class="reflect-eyebrow">
+        <span>The last 24 hours</span>
+        <span class="ribbon" id="d-ribbon">Strong day</span>
+      </div>
+
+      <!-- Personalized reflection — generated from data -->
+      <p class="reflect-message" id="d-reflect">
+        Yesterday asked for focus, and you brought it. Sleep was deep,
+        your heart rhythm steady, and your evening wind-down was the best
+        it's been all week — that's <em>where recovery actually happens</em>.
+        Today's a chance to compound that.
+      </p>
+
+      <!-- Three dimensional recommendations — tappable -->
+      <div class="reflect-recs">
+
+        <button class="rec" onclick="openDetail('physical')">
+          <span class="rec-label">Physical</span>
+          <span class="rec-body" id="d-rec-physical">
+            Aim to be in bed by <strong>10:15 PM</strong> — your sleep onset
+            has been late this week. Hydrate early, finish caffeine before noon.
+          </span>
+          <span class="rec-arrow">›</span>
+        </button>
+
+        <button class="rec" onclick="openDetail('mental')">
+          <span class="rec-label">Mental</span>
+          <span class="rec-body" id="d-rec-mental">
+            Block <strong>20 quiet minutes</strong> before practice — no phone,
+            no input. Your stress signal is elevated; a clear mind will train better
+            than a busy one.
+          </span>
+          <span class="rec-arrow">›</span>
+        </button>
+
+        <button class="rec" onclick="openDetail('emotional')">
+          <span class="rec-label">Emotional</span>
+          <span class="rec-body" id="d-rec-emotional">
+            Reach out to <strong>one person</strong> who matters to you today.
+            A short message, a real conversation — connection lowers cortisol
+            more than any supplement.
+          </span>
+          <span class="rec-arrow">›</span>
+        </button>
+
+      </div>
+
+      <!-- Curated wisdom quote -->
+      <div class="reflect-quote">
+        <p class="reflect-quote-text" id="d-quote">
+          "The successful warrior is the average person, with laser-like focus."
+        </p>
+        <p class="reflect-quote-attr" id="d-quote-attr">Bruce Lee</p>
+      </div>
+
+    </div>
+
+    <!-- ═══ HIDDEN SIGNAL DETAIL — only when asked for ═════════ -->
+    <div class="signals" id="signals">
+      <div class="signals-inner">
+        <p class="signals-eyebrow">If you want the detail</p>
+        <div class="signals-grid">
+          <div class="signal-cell">
+            <div class="signal-label">Sleep</div>
+            <div class="signal-value">8.1<span class="signal-unit">hr</span></div>
+          </div>
+          <div class="signal-cell">
+            <div class="signal-label">Heart Rhythm</div>
+            <div class="signal-value">68<span class="signal-unit">ms</span></div>
+          </div>
+          <div class="signal-cell">
+            <div class="signal-label">Resting HR</div>
+            <div class="signal-value">52<span class="signal-unit">bpm</span></div>
+          </div>
+          <div class="signal-cell">
+            <div class="signal-label">Body Feels</div>
+            <div class="signal-value">Soft</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ ACTIONS ═════════════════════════════════════════════ -->
+    <div class="actions">
+      <div class="action-row">
+        <button class="action-link" id="reveal-btn" onclick="toggleSignals()">
+          View signals
+        </button>
+        <button class="action-link">
+          Message Sarah
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══ PHYSICAL DETAIL SCREEN ═════════════════════════════ -->
+  <div class="detail-screen" id="screen-physical">
+    <div class="detail-inner">
+
+      <button class="detail-back" onclick="closeDetail()">
+        <span class="detail-back-arrow">←</span>
+        Back to today
+      </button>
+
+      <div class="detail-eyebrow">Physical Recovery</div>
+      <h1 class="detail-title">Your body's last 24 hours.</h1>
+      <p class="detail-lead">
+        You slept deeply but went to bed late. Your training load was moderate.
+        The window for recovery is open — here's how to use it.
+      </p>
+
+      <div class="detail-rec">
+        <div class="detail-rec-label">Tonight's anchor</div>
+        <p class="detail-rec-text">
+          Be in bed by <strong>10:15 PM</strong>. Your sleep onset has drifted
+          47 minutes later this week. Tonight is when you start pulling it back.
+        </p>
+      </div>
+
+      <h2 class="detail-section-h">The signals</h2>
+      <div class="detail-metrics">
+        <div class="detail-metric">
+          <div class="detail-metric-label">Sleep</div>
+          <div class="detail-metric-value">8.1<span class="detail-metric-unit">hr</span></div>
+          <div class="detail-metric-delta">+0.4 vs avg</div>
+        </div>
+        <div class="detail-metric">
+          <div class="detail-metric-label">Deep Sleep</div>
+          <div class="detail-metric-value">1.8<span class="detail-metric-unit">hr</span></div>
+          <div class="detail-metric-delta">+12%</div>
+        </div>
+        <div class="detail-metric">
+          <div class="detail-metric-label">Resting HR</div>
+          <div class="detail-metric-value">52<span class="detail-metric-unit">bpm</span></div>
+          <div class="detail-metric-delta">–2 bpm</div>
+        </div>
+        <div class="detail-metric">
+          <div class="detail-metric-label">HRV</div>
+          <div class="detail-metric-value">68<span class="detail-metric-unit">ms</span></div>
+          <div class="detail-metric-delta">+6 ms</div>
+        </div>
+        <div class="detail-metric">
+          <div class="detail-metric-label">Sleep Onset</div>
+          <div class="detail-metric-value">11:02<span class="detail-metric-unit">pm</span></div>
+          <div class="detail-metric-delta down">+47 min later</div>
+        </div>
+        <div class="detail-metric">
+          <div class="detail-metric-label">Training Load</div>
+          <div class="detail-metric-value">62<span class="detail-metric-unit">au</span></div>
+          <div class="detail-metric-delta">Moderate</div>
+        </div>
+      </div>
+
+      <div class="detail-trend">
+        <div class="detail-trend-header">
+          <span class="detail-trend-title">Sleep this week</span>
+          <span class="detail-trend-window">7 days</span>
+        </div>
+        <div class="trend-bars">
+          <div class="trend-bar" style="height: 62%"></div>
+          <div class="trend-bar" style="height: 78%"></div>
+          <div class="trend-bar" style="height: 70%"></div>
+          <div class="trend-bar" style="height: 55%"></div>
+          <div class="trend-bar" style="height: 80%"></div>
+          <div class="trend-bar" style="height: 88%"></div>
+          <div class="trend-bar today" style="height: 92%"></div>
+        </div>
+        <div class="trend-labels">
+          <span class="trend-label">W</span>
+          <span class="trend-label">T</span>
+          <span class="trend-label">F</span>
+          <span class="trend-label">S</span>
+          <span class="trend-label">S</span>
+          <span class="trend-label">M</span>
+          <span class="trend-label today">T</span>
+        </div>
+      </div>
+
+      <h2 class="detail-section-h">For the next 24 hours</h2>
+      <div class="detail-actions">
+        <div class="detail-action">
+          <div class="detail-action-bullet"></div>
+          <div class="detail-action-body">
+            <div class="detail-action-title">Hydrate before 10 AM</div>
+            <div class="detail-action-note">
+              500 ml of water with electrolytes. Your overnight respiratory rate
+              suggests mild dehydration.
+            </div>
+          </div>
+        </div>
+        <div class="detail-action">
+          <div class="detail-action-bullet"></div>
+          <div class="detail-action-body">
+            <div class="detail-action-title">Last caffeine by noon</div>
+            <div class="detail-action-note">
+              Your sleep architecture is sensitive to afternoon caffeine —
+              we see it in your deep sleep numbers two nights later.
+            </div>
+          </div>
+        </div>
+        <div class="detail-action">
+          <div class="detail-action-bullet"></div>
+          <div class="detail-action-body">
+            <div class="detail-action-title">Mobility work after practice</div>
+            <div class="detail-action-note">
+              15 minutes of soft tissue work tonight. Yesterday's session loaded
+              your posterior chain.
+            </div>
+          </div>
+        </div>
+        <div class="detail-action">
+          <div class="detail-action-bullet"></div>
+          <div class="detail-action-body">
+            <div class="detail-action-title">In bed by 10:15 PM</div>
+            <div class="detail-action-note">
+              Phones away by 9:45. Dim lights, slow breathing. The body knows
+              what to do once you give it the runway.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-note">
+        These recommendations are observations from your data, not prescriptions.
+        Listen to your body. If something feels off, talk to Sarah.
+      </div>
+
+      <div class="screen-nav">
+        <button class="screen-nav-btn icon-only" disabled><span class="screen-nav-arrow">←</span></button>
+        <div class="screen-nav-dots"><span class="screen-nav-dot active"></span><span class="screen-nav-dot"></span><span class="screen-nav-dot"></span></div>
+        <button class="screen-nav-btn screen-nav-home icon-only" onclick="closeDetail()" title="Home">⌂</button>
+        <button class="screen-nav-btn" onclick="gotoDetail('mental')">Mental <span class="screen-nav-arrow">→</span></button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══ MENTAL DETAIL SCREEN ═══════════════════════════════ -->
+  <div class="detail-screen" id="screen-mental">
+    <div class="detail-inner">
+
+      <button class="detail-back" onclick="closeDetail()">
+        <span class="detail-back-arrow">←</span>
+        Back to today
+      </button>
+
+      <div class="detail-eyebrow">Mental Performance</div>
+      <h1 class="detail-title">Your focus, the last 24 hours.</h1>
+      <p class="detail-lead">
+        Your stress signal is elevated, but recoverable. Your cognitive load
+        has been heavy for three days. Today is a chance to give your mind
+        some space.
+      </p>
+
+      <div class="detail-rec">
+        <div class="detail-rec-label">Today's practice</div>
+        <p class="detail-rec-text">
+          Block <strong>20 quiet minutes</strong> before training.
+          No phone, no input. A clear mind will train better than a busy one.
+        </p>
+      </div>
+
+      <h2 class="detail-section-h">The signals</h2>
+      <div class="detail-metrics">
+        <div class="detail-metric">
+          <div class="detail-metric-label">Stress Index</div>
+          <div class="detail-metric-value">42<span class="detail-metric-unit">/100</span></div>
+          <div class="detail-metric-delta down">+8 vs avg</div>
+        </div>
+        <div class="detail-metric">
+          <div class="detail-metric-label">Cognitive Load</div>
+          <div class="detail-metric-value">Med</div>
+          <div class="detail-metric-delta down">3rd day high</div>
+        </div>
+        <div class="detail-metric">
+          <div class="detail-metric-label">Screen Time</div>
+          <div class="detail-metric-value">6.4<span class="detail-metric-unit">hr</span></div>
+          <div class="detail-metric-delta down">+1.2 hr</div>
+        </div>
+        <div class="detail-metric">
+          <div class="detail-metric-label">Mood Check-in</div>
+          <div class="detail-metric-value">7<span class="detail-metric-unit">/10</span></div>
+          <div class="detail-metric-delta">Steady</div>
+        </div>
+      </div>
+
+      <div class="detail-trend">
+        <div class="detail-trend-header">
+          <span class="detail-trend-title">Stress this week</span>
+          <span class="detail-trend-window">7 days</span>
+        </div>
+        <div class="trend-bars">
+          <div class="trend-bar" style="height: 35%"></div>
+          <div class="trend-bar" style="height: 28%"></div>
+          <div class="trend-bar" style="height: 40%"></div>
+          <div class="trend-bar" style="height: 52%"></div>
+          <div class="trend-bar" style="height: 58%"></div>
+          <div class="trend-bar" style="height: 50%"></div>
+          <div class="trend-bar today" style="height: 65%"></div>
+        </div>
+        <div class="trend-labels">
+          <span class="trend-label">W</span>
+          <span class="trend-label">T</span>
+          <span class="trend-label">F</span>
+          <span class="trend-label">S</span>
+          <span class="trend-label">S</span>
+          <span class="trend-label">M</span>
+          <span class="trend-label today">T</span>
+        </div>
+      </div>
+
+      <h2 class="detail-section-h">For the next 24 hours</h2>
+      <div class="detail-actions">
+        <div class="detail-action">
+          <div class="detail-action-bullet"></div>
+          <div class="detail-action-body">
+            <div class="detail-action-title">20 minutes of quiet pre-practice</div>
+            <div class="detail-action-note">
+              Find a private space. Phone in airplane mode. Just breathe
+              and arrive in your body before you ask it to perform.
+            </div>
+          </div>
+        </div>
+        <div class="detail-action">
+          <div class="detail-action-bullet"></div>
+          <div class="detail-action-body">
+            <div class="detail-action-title">One clear intention for today</div>
+            <div class="detail-action-note">
+              Write it down. One sentence. Not a goal — a way of being.
+              "I want to be steady." "I want to listen." "I want to be present."
+            </div>
+          </div>
+        </div>
+        <div class="detail-action">
+          <div class="detail-action-bullet"></div>
+          <div class="detail-action-body">
+            <div class="detail-action-title">90-minute screen break</div>
+            <div class="detail-action-note">
+              Sometime today, no devices for 90 minutes. Walk, read, talk to
+              someone. Your stress signal needs the room.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-note">
+        Mental load shows up in the body before it shows up in performance.
+        Catching it early is how you stay clear on game days.
+      </div>
+
+      <div class="screen-nav">
+        <button class="screen-nav-btn" onclick="gotoDetail('physical')"><span class="screen-nav-arrow">←</span> Physical</button>
+        <div class="screen-nav-dots"><span class="screen-nav-dot"></span><span class="screen-nav-dot active"></span><span class="screen-nav-dot"></span></div>
+        <button class="screen-nav-btn screen-nav-home icon-only" onclick="closeDetail()" title="Home">⌂</button>
+        <button class="screen-nav-btn" onclick="gotoDetail('emotional')">Emotional <span class="screen-nav-arrow">→</span></button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══ EMOTIONAL DETAIL SCREEN ════════════════════════════ -->
+  <div class="detail-screen" id="screen-emotional">
+    <div class="detail-inner">
+
+      <button class="detail-back" onclick="closeDetail()">
+        <span class="detail-back-arrow">←</span>
+        Back to today
+      </button>
+
+      <div class="detail-eyebrow">Emotional Recovery</div>
+      <h1 class="detail-title">How you've been feeling.</h1>
+      <p class="detail-lead">
+        Your mood has been steady, but your connection signals — texts sent,
+        social time, evening conversations — have dropped this week. The body
+        notices isolation before the mind does.
+      </p>
+
+      <div class="detail-rec">
+        <div class="detail-rec-label">A small action</div>
+        <p class="detail-rec-text">
+          Reach out to <strong>one person</strong> who matters to you today.
+          A short message, a real conversation. Connection lowers cortisol
+          more than any supplement.
+        </p>
+      </div>
+
+      <h2 class="detail-section-h">The signals</h2>
+      <div class="detail-metrics">
+        <div class="detail-metric">
+          <div class="detail-metric-label">Mood Check-in</div>
+          <div class="detail-metric-value">7<span class="detail-metric-unit">/10</span></div>
+          <div class="detail-metric-delta">Steady</div>
+        </div>
+        <div class="detail-metric">
+          <div class="detail-metric-label">Energy</div>
+          <div class="detail-metric-value">6<span class="detail-metric-unit">/10</span></div>
+          <div class="detail-metric-delta down">–1 vs avg</div>
+        </div>
+        <div class="detail-metric">
+          <div class="detail-metric-label">Motivation</div>
+          <div class="detail-metric-value">8<span class="detail-metric-unit">/10</span></div>
+          <div class="detail-metric-delta">+1</div>
+        </div>
+        <div class="detail-metric">
+          <div class="detail-metric-label">Social Time</div>
+          <div class="detail-metric-value">1.2<span class="detail-metric-unit">hr</span></div>
+          <div class="detail-metric-delta down">–48 min</div>
+        </div>
+      </div>
+
+      <div class="detail-trend">
+        <div class="detail-trend-header">
+          <span class="detail-trend-title">Mood this week</span>
+          <span class="detail-trend-window">7 days</span>
+        </div>
+        <div class="trend-bars">
+          <div class="trend-bar" style="height: 70%"></div>
+          <div class="trend-bar" style="height: 75%"></div>
+          <div class="trend-bar" style="height: 72%"></div>
+          <div class="trend-bar" style="height: 65%"></div>
+          <div class="trend-bar" style="height: 68%"></div>
+          <div class="trend-bar" style="height: 70%"></div>
+          <div class="trend-bar today" style="height: 70%"></div>
+        </div>
+        <div class="trend-labels">
+          <span class="trend-label">W</span>
+          <span class="trend-label">T</span>
+          <span class="trend-label">F</span>
+          <span class="trend-label">S</span>
+          <span class="trend-label">S</span>
+          <span class="trend-label">M</span>
+          <span class="trend-label today">T</span>
+        </div>
+      </div>
+
+      <h2 class="detail-section-h">For the next 24 hours</h2>
+      <div class="detail-actions">
+        <div class="detail-action">
+          <div class="detail-action-bullet"></div>
+          <div class="detail-action-body">
+            <div class="detail-action-title">One real conversation</div>
+            <div class="detail-action-note">
+              Not a text. A voice call, a meal, a walk with someone who knows you.
+              Even 15 minutes shifts the chemistry.
+            </div>
+          </div>
+        </div>
+        <div class="detail-action">
+          <div class="detail-action-bullet"></div>
+          <div class="detail-action-body">
+            <div class="detail-action-title">Notice three good things</div>
+            <div class="detail-action-note">
+              Before bed, name three things from today that went well. Small ones
+              count. Your nervous system files what you point at.
+            </div>
+          </div>
+        </div>
+        <div class="detail-action">
+          <div class="detail-action-bullet"></div>
+          <div class="detail-action-body">
+            <div class="detail-action-title">Ten minutes outside</div>
+            <div class="detail-action-note">
+              No phone. Morning sun if possible. Movement helps emotion process
+              the way sleep helps the body recover.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-note">
+        Athletes are taught to push through. Sometimes the strongest move
+        is to stop and let someone in.
+      </div>
+
+      <div class="screen-nav">
+        <button class="screen-nav-btn" onclick="gotoDetail('mental')"><span class="screen-nav-arrow">←</span> Mental</button>
+        <div class="screen-nav-dots"><span class="screen-nav-dot"></span><span class="screen-nav-dot"></span><span class="screen-nav-dot active"></span></div>
+        <button class="screen-nav-btn screen-nav-home icon-only" onclick="closeDetail()" title="Home">⌂</button>
+        <button class="screen-nav-btn icon-only" disabled><span class="screen-nav-arrow">→</span></button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══ POST-MATCH RECOVERY SCREEN ═════════════════════════ -->
+  <div class="detail-screen" id="screen-postmatch">
+    <div class="detail-inner">
+      <button class="detail-back" onclick="closePostMatch()">
+        <span class="detail-back-arrow">←</span>
+        <span data-i18n="back">Back to today</span>
+      </button>
+
+      <div class="detail-eyebrow" style="color:var(--accent)" data-i18n="pm-eyebrow">Post-Match Recovery</div>
+      <h1 class="detail-title" data-i18n="pm-title">The next 12 hours matter most.</h1>
+      <p class="detail-lead" data-i18n="pm-lead">Final whistle was 18 minutes ago. Your recovery window is open now — here is your plan, timed to your body and tonight's schedule.</p>
+
+      <!-- The live countdown ritual -->
+      <div class="pm-ritual">
+        <div class="pm-ritual-head">
+          <span data-i18n="pm-window">Recovery window</span>
+          <span class="pm-countdown" id="pm-countdown">59:24</span>
+        </div>
+        <div class="pm-steps">
+          <div class="pm-step">
+            <div class="pm-step-time">NOW</div>
+            <div class="pm-step-body">
+              <div class="pm-step-title" data-i18n="pm-s1-t">Cold plunge — 11 minutes</div>
+              <div class="pm-step-note" data-i18n="pm-s1-n">Your core temperature and heart rate are still elevated. Cold exposure now blunts inflammation most effectively.</div>
+            </div>
+          </div>
+          <div class="pm-step">
+            <div class="pm-step-time">+60 MIN</div>
+            <div class="pm-step-body">
+              <div class="pm-step-title" data-i18n="pm-s2-t">30g protein</div>
+              <div class="pm-step-note" data-i18n="pm-s2-n">Within the hour. Your match load was high — this is the muscle-repair window.</div>
+            </div>
+          </div>
+          <div class="pm-step">
+            <div class="pm-step-time">22:30</div>
+            <div class="pm-step-body">
+              <div class="pm-step-title" data-i18n="pm-s3-t">Lights out by 10:30 PM</div>
+              <div class="pm-step-note" data-i18n="pm-s3-n">You have a short turnaround. Sleep is the single biggest lever on tomorrow — protect it tonight.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-note" data-i18n="pm-foot">This recovery plan is built from your match data and reviewed by your medical team. Adjust with Sarah if anything feels off.</div>
+    </div>
+  </div>
+
+  <!-- ═══ FAMILY VIEW SCREEN ═════════════════════════════════ -->
+  <div class="detail-screen" id="screen-family">
+    <div class="detail-inner">
+      <button class="detail-back" onclick="closeFamily()">
+        <span class="detail-back-arrow">←</span>
+        <span data-i18n="back">Back to today</span>
+      </button>
+
+      <div class="detail-eyebrow" style="color:var(--accent)" data-i18n="fam-eyebrow">Family View · Shared by Maya</div>
+      <h1 class="detail-title" data-i18n="fam-title">Maya is doing well.</h1>
+      <p class="detail-lead" data-i18n="fam-lead">A calm, private window Maya chose to share with you. No numbers, no medical detail — just peace of mind, in your language.</p>
+
+      <div class="fam-card">
+        <div class="fam-state-dot"></div>
+        <div class="fam-state-word" data-i18n="fam-state">Recovered &amp; ready</div>
+        <div class="fam-state-sub" data-i18n="fam-sub">Sleeping well, training safely, and cleared by the team's medical staff this morning.</div>
+      </div>
+
+      <div class="fam-rows">
+        <div class="fam-row"><span data-i18n="fam-r1-k">Last check-in</span><span data-i18n="fam-r1-v">This morning, 5:48 AM</span></div>
+        <div class="fam-row"><span data-i18n="fam-r2-k">Cleared by</span><span data-i18n="fam-r2-v">Sarah, Athletic Trainer</span></div>
+        <div class="fam-row"><span data-i18n="fam-r3-k">Overall this week</span><span data-i18n="fam-r3-v">Steady and healthy</span></div>
+      </div>
+
+      <div class="detail-note" data-i18n="fam-foot">Maya controls what you see and can change it any time. This view is for reassurance, not monitoring.</div>
+    </div>
+  </div>
+
+  <script>
+    // ═══ SILENT WEATHER LAYER ══════════════════════════════
+    // Weather never renders. It is read by the engine as a
+    // recovery-load signal: heat and humidity raise cardiovascular
+    // strain and slow recovery; cold changes warm-up demand.
+    // In production this is pulled from a weather API for the
+    // athlete's location and the venue of upcoming events; here
+    // it is fixed demo data.
+    var WEATHER = {
+      today:    { tempF: 88, humidity: 70, condition: 'hot-humid' },
+      nextGame: { tempF: 91, humidity: 64, condition: 'hot' }   // match-day forecast
+    };
+
+    // Extract the recovery-relevant weather signal. Only returns a
+    // clause when weather is actually significant — mild days stay
+    // silent so the engine's voice never clutters.
+    function getWeatherContext() {
+      var w = WEATHER.today, g = WEATHER.nextGame;
+      var ctx = { significant: false, today: '', gameDay: '' };
+
+      // Heat stress today (heat + humidity compound cardiovascular load)
+      if (w.tempF >= 85 && w.humidity >= 60) {
+        ctx.significant = true;
+        ctx.today = 'heat and humidity today';
+      } else if (w.tempF >= 88) {
+        ctx.significant = true;
+        ctx.today = 'heat today';
+      } else if (w.tempF <= 38) {
+        ctx.significant = true;
+        ctx.today = 'cold today';
+      }
+
+      // Hot match-day forecast (changes how to prepare in advance)
+      if (g && g.tempF >= 88) {
+        ctx.gameDay = 'a hot match forecast';
+      }
+      return ctx;
+    }
+
+    // Fold weather into a state's recommendation, disciplined:
+    // only adds a clause when weather is significant, and keeps it
+    // to one short phrase so body + schedule + weather never pile up.
+    function applyWeather(key, s) {
+      var w = getWeatherContext();
+      if (!w.significant && !w.gameDay) return s;
+      var out = Object.assign({}, s);
+
+      // Heat is the main recovery lever — hydration + load framing
+      if (w.today.indexOf('heat') === 0 || w.today.indexOf('heat and') === 0) {
+        if (key === 'recovered') {
+          out.notifBody = out.notifBody.replace(/\.$/, '') +
+            " With " + w.today + ", hydrate early and keep the hard work short.";
+        } else if (key === 'balanced') {
+          out.notifBody = out.notifBody.replace(/\.$/, '') +
+            " " + capitalize(w.today) + " adds load — hydrate ahead and respect the heat.";
+        } else if (key === 'adapt') {
+          out.notifBody = out.notifBody.replace(/\.$/, '') +
+            " " + capitalize(w.today) + " adds cardiovascular strain on an already-low day — favor shade, fluids, and rest.";
+        }
+      } else if (w.today.indexOf('cold') === 0) {
+        out.notifBody = out.notifBody.replace(/\.$/, '') +
+          " " + capitalize(w.today) + " — extend your warm-up before anything intense.";
+      }
+      return out;
+    }
+
+    // ═══ SILENT SCHEDULE LAYER ═════════════════════════════
+    // The schedule never renders. It is read by the engine as a
+    // demand forecast and shapes the recommendation. Practices,
+    // games, travel, and lifts feed in as load-demand signals.
+    // In production this is ingested from the team calendar; here
+    // it is a fixed demo schedule relative to "now".
+    var SCHEDULE = [
+      { type: 'lift',     label: 'Lift session',   inHours: 6,  demand: 'moderate' },
+      { type: 'practice', label: 'Team practice',  inHours: 30, demand: 'moderate' },
+      { type: 'travel',   label: 'Away travel',    inHours: 28, demand: 'low'      },
+      { type: 'game',     label: 'Match',          inHours: 54, demand: 'high'     }
+    ];
+
+    // Compute the demand context the engine reasons over.
+    // Returns the next high-demand event and a short phrase the
+    // engine can fold into its recommendation.
+    function getDemandContext() {
+      // soonest high-demand event (a game/match) drives the framing
+      var hardEvents = SCHEDULE
+        .filter(function (e) { return e.demand === 'high'; })
+        .sort(function (a, b) { return a.inHours - b.inHours; });
+      var nextHard = hardEvents[0] || null;
+
+      // soonest event of any kind (for near-term framing)
+      var soonest = SCHEDULE.slice().sort(function (a, b) { return a.inHours - b.inHours; })[0];
+
+      var ctx = { nextHard: nextHard, soonest: soonest, phrase: '', clause: '' };
+
+      if (nextHard) {
+        var h = nextHard.inHours;
+        if (h <= 24)      { ctx.phrase = nextHard.label + ' in under a day'; }
+        else if (h <= 48) { ctx.phrase = nextHard.label + ' in ' + Math.round(h) + ' hours'; }
+        else              { ctx.phrase = nextHard.label + ' in ' + Math.round(h / 24) + ' days'; }
+      }
+      return ctx;
+    }
+
+    // Fold schedule demand into a state's message + notification.
+    // Same readiness score; schedule-adjusted guidance.
+    function applySchedule(key, s) {
+      var ctx = getDemandContext();
+      if (!ctx.nextHard) return s;
+      var out = Object.assign({}, s);
+      var h = ctx.nextHard.inHours;
+
+      if (key === 'recovered') {
+        // ready + hard event coming → bank it, don't over-spend now
+        out.message = s.message.replace(/\.$/, '') +
+          " With <em>" + ctx.phrase + "</em>, today's strength is worth banking — train sharp, not deep.";
+        out.notifBody = s.notifBody.replace(/\.$/, '') +
+          " " + capitalize(ctx.phrase) + " — keep something in reserve.";
+      } else if (key === 'balanced') {
+        // steady + hard event → hold the line precisely because of it
+        out.message = s.message.replace(/\.$/, '') +
+          " <em>" + capitalize(ctx.phrase) + "</em> — steady today is exactly how you arrive ready.";
+        out.notifBody = s.notifBody.replace(/\.$/, '') +
+          " With " + ctx.phrase + ", consistency now pays off then.";
+      } else if (key === 'adapt') {
+        // low + hard event → the most important schedule-aware message:
+        // back off now precisely to protect the upcoming event
+        out.message = s.message.replace(/\.$/, '') +
+          " With <em>" + ctx.phrase + "</em>, easing off today isn't lost time — it's how you protect that day.";
+        out.notifBody = s.notifBody.replace(/\.$/, '') +
+          " " + capitalize(ctx.phrase) + ": backing off now is what makes you available then.";
+      }
+      return out;
+    }
+    function capitalize(str){ return str.charAt(0).toUpperCase() + str.slice(1); }
+
+    // ═══ THREE-STATE DEMO ENGINE ═══════════════════════════
+    var STATES = {
+      recovered: {
+        color: '#00E676', glow: 'rgba(0,230,118,0.32)',
+        orb: 'radial-gradient(circle at 50% 40%, rgba(0,230,118,0.30) 0%, rgba(0,230,118,0.10) 35%, rgba(10,15,31,0) 70%)',
+        score: '84', status: 'Recovered', ribbon: 'Strong day',
+        short: 'Ready. Train sharp, not deep.',
+        greeting: 'Good morning, Maya.',
+        message: "You slept deeply. Your body is <em>ready</em> — but there's no need to push hard. A calm, focused session will serve you well today.",
+        notifStatus: 'Safe to train',
+        notifTitle: 'Move gently into the day.',
+        notifBody: "Your recovery is strong. Listen to your body during warm-up — if anything feels off, we'll adjust together. You don't need to prove anything today.",
+        reflect: "Yesterday asked for focus, and you brought it. Sleep was deep, your heart rhythm steady, and your evening wind-down was the best it's been all week — that's <em>where recovery actually happens</em>. Today's a chance to compound that.",
+        recPhysical: "Aim to be in bed by <strong>10:15 PM</strong> — your sleep onset has been late this week. Hydrate early, finish caffeine before noon.",
+        recMental: "Block <strong>20 quiet minutes</strong> before practice — no phone, no input. A clear mind will train better than a busy one.",
+        recEmotional: "Reach out to <strong>one person</strong> who matters to you today. A short message, a real conversation — connection grounds you.",
+        quote: '"The successful warrior is the average person, with laser-like focus."',
+        quoteAttr: 'Bruce Lee'
+      },
+      balanced: {
+        color: '#2979FF', glow: 'rgba(41,121,255,0.32)',
+        orb: 'radial-gradient(circle at 50% 40%, rgba(41,121,255,0.28) 0%, rgba(41,121,255,0.10) 35%, rgba(10,15,31,0) 70%)',
+        score: '71', status: 'Balanced', ribbon: 'Steady day',
+        short: 'Steady. Hold the line.',
+        greeting: 'Good morning, Maya.',
+        message: "You're in a steady place. Not peaked, not depleted — <em>balanced</em>. Today is for consistency, not heroics. Train well and protect tonight's sleep.",
+        notifStatus: 'Train as planned',
+        notifTitle: 'Hold your line today.',
+        notifBody: "Your signals are steady and within range. Stick to the plan, keep the intensity honest, and let the small habits do the work. Nothing to force.",
+        reflect: "Yesterday was even. Sleep was adequate, your load was moderate, and your body absorbed it without drama. <em>Steady is underrated</em> — it's what lets you show up the same way tomorrow. Keep the rhythm.",
+        recPhysical: "Protect your <strong>sleep window</strong> tonight — same bedtime as last night held your HRV steady. Don't shorten it for a late session.",
+        recMental: "Set <strong>one clear focus</strong> for practice. Steady days drift without an anchor — pick the single thing you want to do well.",
+        recEmotional: "Check in with a <strong>teammate</strong>, not just yourself. Steady weeks are when connection quietly keeps you grounded.",
+        quote: '"It does not matter how slowly you go as long as you do not stop."',
+        quoteAttr: 'Confucius'
+      },
+      adapt: {
+        color: '#D500F9', glow: 'rgba(213,0,249,0.30)',
+        orb: 'radial-gradient(circle at 50% 40%, rgba(213,0,249,0.26) 0%, rgba(213,0,249,0.09) 35%, rgba(10,15,31,0) 70%)',
+        score: '48', status: 'Adapt', ribbon: 'Softer day',
+        short: "Ease off today. You're protecting Saturday.",
+        greeting: 'Good morning, Maya.',
+        message: "Your body is asking for something gentler today, and that's <em>okay</em>. Yesterday took more than it gave back. Today is for recovery, not proof.",
+        notifStatus: 'Ease off today',
+        notifTitle: "Today is a softer day.",
+        notifBody: "Your recovery markers are low and your body needs the room. This isn't a setback — it's the part of training that makes the hard days possible. Talk to Sarah before any high-intensity work.",
+        reflect: "Yesterday overreached you a little. Sleep was shallow, your heart rhythm was restless, and your body is carrying the cost this morning. <em>This is information, not failure</em>. The athletes who last are the ones who listen on days like this.",
+        recPhysical: "Skip the high-intensity block. <strong>20 minutes of easy movement</strong> and an early night will do more than pushing through. Hydrate, eat well, rest.",
+        recMental: "Lower the bar for today on purpose. <strong>No performance pressure</strong> — your only job is to recover and reset. Let that be enough.",
+        recEmotional: "Tell <strong>someone you trust</strong> that today is a hard one. Naming it out loud is how you keep a soft day from becoming a heavy week.",
+        quote: '"Almost everything will work again if you unplug it for a few minutes — including you."',
+        quoteAttr: 'Anne Lamott'
+      }
+    };
+
+    function setState(key) {
+      var base = STATES[key];
+      if (!base) return;
+      // Fold the silent layers into the recommendation: schedule, then weather
+      var s = applySchedule(key, base);
+      s = applyWeather(key, s);
+      var root = document.documentElement;
+
+      // Repaint the two master color variables — recolors the whole UI
+      root.style.setProperty('--safe', s.color);
+      root.style.setProperty('--safe-glow', s.glow);
+
+      // Orb core gradient
+      var orb = document.querySelector('.orb-core');
+      if (orb) orb.style.background = s.orb;
+
+      // Text content
+      function set(id, html) { var el = document.getElementById(id); if (el) el.innerHTML = html; }
+      set('d-status', s.status);
+      set('d-ribbon', s.ribbon);
+      set('d-greeting', s.greeting);
+      set('d-short', s.short);
+      set('d-message', s.message);
+      // Reset the full-text reveal each time the state changes
+      var body = document.getElementById('d-message');
+      var moreBtn = document.getElementById('d-more');
+      if (body) body.classList.remove('revealed');
+      if (moreBtn) moreBtn.textContent = 'more';
+      set('d-notif-status', s.notifStatus);
+      set('d-notif-title', s.notifTitle);
+      set('d-notif-body', s.notifBody);
+      set('d-reflect', s.reflect);
+      set('d-rec-physical', s.recPhysical);
+      set('d-rec-mental', s.recMental);
+      set('d-rec-emotional', s.recEmotional);
+      set('d-quote', s.quote);
+      set('d-quote-attr', s.quoteAttr);
+
+      // Toggle button active states
+      ['recovered','balanced','adapt'].forEach(function(k){
+        var btn = document.getElementById('btn-' + k);
+        if (!btn) return;
+        if (k === key) {
+          btn.classList.add('active');
+          btn.style.background = STATES[k].color;
+          btn.style.borderColor = STATES[k].color;
+        } else {
+          btn.classList.remove('active');
+          btn.style.background = 'transparent';
+          btn.style.borderColor = 'rgba(244,246,250,0.14)';
+        }
+      });
+    }
+
+    // Initialize on Recovered
+    setState('recovered');
+
+    function toggleMessage() {
+      var body = document.getElementById('d-message');
+      var btn = document.getElementById('d-more');
+      var open = body.classList.toggle('revealed');
+      btn.textContent = open ? 'less' : 'more';
+    }
+
+    function toggleSignals() {
+      const panel = document.getElementById('signals');
+      const btn   = document.getElementById('reveal-btn');
+      panel.classList.toggle('revealed');
+      btn.textContent = panel.classList.contains('revealed')
+        ? 'Hide signals'
+        : 'View signals';
+    }
+
+    function openDetail(which) {
+      const screen = document.getElementById('screen-' + which);
+      if (!screen) return;
+      screen.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      // Scroll detail screen to top
+      screen.scrollTop = 0;
+    }
+
+    // Page directly from one detail screen to another (forward/back)
+    function gotoDetail(which) {
+      // close the three reflection screens, then open the target
+      ['physical','mental','emotional'].forEach(function(k){
+        var s = document.getElementById('screen-' + k);
+        if (s) s.classList.remove('open');
+      });
+      var target = document.getElementById('screen-' + which);
+      if (target) { target.classList.add('open'); target.scrollTop = 0; }
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeDetail() {
+      document.querySelectorAll('.detail-screen').forEach(s => s.classList.remove('open'));
+      document.body.style.overflow = '';
+    }
+
+    // ESC key closes any open detail
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { closeDetail(); closePostMatch(); closeFamily(); }
+    });
+
+    // ═══ POST-MATCH RECOVERY (with live countdown) ═══════════
+    var pmTimer = null;
+    function openPostMatch() {
+      var s = document.getElementById('screen-postmatch');
+      s.classList.add('open'); document.body.style.overflow = 'hidden'; s.scrollTop = 0;
+      // Start a live countdown from 59:24 to evoke the Live Activity feel
+      var total = 59 * 60 + 24;
+      var el = document.getElementById('pm-countdown');
+      clearInterval(pmTimer);
+      pmTimer = setInterval(function () {
+        total--; if (total < 0) { clearInterval(pmTimer); return; }
+        var m = Math.floor(total / 60), sec = total % 60;
+        el.textContent = m + ':' + (sec < 10 ? '0' + sec : sec);
+      }, 1000);
+    }
+    function closePostMatch() {
+      document.getElementById('screen-postmatch').classList.remove('open');
+      document.body.style.overflow = ''; clearInterval(pmTimer);
+    }
+
+    // ═══ FAMILY VIEW ════════════════════════════════════════
+    function openFamily() {
+      var s = document.getElementById('screen-family');
+      s.classList.add('open'); document.body.style.overflow = 'hidden'; s.scrollTop = 0;
+    }
+    function closeFamily() {
+      document.getElementById('screen-family').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    // ═══ LANGUAGE LAYER (native-quality, not machine) ════════
+    // Demonstrates the principle with one fully, carefully translated
+    // language (Portuguese). In production every language is native-
+    // authored — this proves the architecture, honestly, with real text.
+    var I18N = {
+      pt: {
+        'back': 'Voltar para hoje',
+        'pm-eyebrow': 'Recuperação Pós-Jogo',
+        'pm-title': 'As próximas 12 horas são as mais importantes.',
+        'pm-lead': 'O apito final foi há 18 minutos. A sua janela de recuperação está aberta agora — aqui está o seu plano, ajustado ao seu corpo e à agenda de hoje à noite.',
+        'pm-window': 'Janela de recuperação',
+        'pm-s1-t': 'Banho de gelo — 11 minutos',
+        'pm-s1-n': 'A sua temperatura corporal e frequência cardíaca ainda estão elevadas. O frio agora reduz a inflamação de forma mais eficaz.',
+        'pm-s2-t': '30g de proteína',
+        'pm-s2-n': 'Dentro de uma hora. A carga do jogo foi alta — esta é a janela de reparação muscular.',
+        'pm-s3-t': 'Dormir até às 22:30',
+        'pm-s3-n': 'Tem pouco tempo de recuperação. O sono é o maior fator para o dia de amanhã — proteja-o esta noite.',
+        'pm-foot': 'Este plano de recuperação é criado a partir dos dados do seu jogo e revisto pela equipa médica. Ajuste com a Sarah se algo não parecer bem.',
+        'fam-eyebrow': 'Visão da Família · Partilhado pela Maya',
+        'fam-title': 'A Maya está bem.',
+        'fam-lead': 'Uma janela calma e privada que a Maya escolheu partilhar consigo. Sem números, sem detalhes médicos — apenas tranquilidade, no seu idioma.',
+        'fam-state': 'Recuperada e pronta',
+        'fam-sub': 'A dormir bem, a treinar com segurança e liberada pela equipa médica esta manhã.',
+        'fam-r1-k': 'Última verificação', 'fam-r1-v': 'Hoje de manhã, 5:48',
+        'fam-r2-k': 'Liberada por', 'fam-r2-v': 'Sarah, Fisioterapeuta',
+        'fam-r3-k': 'Resumo da semana', 'fam-r3-v': 'Estável e saudável',
+        'fam-foot': 'A Maya controla o que vê e pode alterar a qualquer momento. Esta visão é para tranquilidade, não para monitorização.'
+      }
+    };
+    var I18N_EN = {}; // captured from the DOM on first load
+    function captureEN() {
+      document.querySelectorAll('[data-i18n]').forEach(function (el) {
+        I18N_EN[el.getAttribute('data-i18n')] = el.innerHTML;
+      });
+    }
+    function setLang(lang) {
+      var dict = lang === 'pt' ? I18N.pt : I18N_EN;
+      document.querySelectorAll('[data-i18n]').forEach(function (el) {
+        var k = el.getAttribute('data-i18n');
+        if (dict[k] != null) el.innerHTML = dict[k];
+      });
+      document.getElementById('lang-en').classList.toggle('active', lang === 'en');
+      document.getElementById('lang-pt').classList.toggle('active', lang === 'pt');
+    }
+    captureEN();
+    document.getElementById('lang-en').classList.add('active');
+  </script>
+
+</body>
+</html>
+
